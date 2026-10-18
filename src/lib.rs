@@ -1659,11 +1659,12 @@ impl Rtc {
                 }
                 DtlsOutput::KeyingMaterial(km, profile) => {
                     use config::KeyingMaterial;
-                    let km_bytes = km.as_ref().to_vec();
                     debug!("DTLS set SRTP keying material and profile: {}", profile);
                     let active = self.dtls.is_active().expect("DTLS must be inited by now");
+                    // Copy straight from the DTLS output: an intermediate Vec would leave a copy of
+                    // the SRTP master keys in freed memory.
                     self.session.set_keying_material(
-                        KeyingMaterial::new(&km_bytes),
+                        KeyingMaterial::new(&km),
                         &self.crypto_provider,
                         profile,
                         active,
