@@ -728,6 +728,14 @@ struct SrtpKey<const ML: usize, const SL: usize> {
     salt: [u8; SL],
 }
 
+impl<const ML: usize, const SL: usize> Drop for SrtpKey<ML, SL> {
+    // The SRTP master key and salt: zeroed when the key is dropped.
+    fn drop(&mut self) {
+        zeroize::Zeroize::zeroize(&mut self.master);
+        zeroize::Zeroize::zeroize(&mut self.salt);
+    }
+}
+
 impl<const ML: usize, const SL: usize> SrtpKey<ML, SL> {
     pub fn new(mat: &KeyingMaterial, left: bool) -> Self {
         // layout in SrtpKeyMaterial is [key_input, key_output, salt_input, salt_output]
@@ -814,6 +822,22 @@ enum Derived {
         enc: Box<dyn AeadAes256GcmCipher>,
         dec: Box<dyn AeadAes256GcmCipher>,
     },
+}
+
+impl Drop for Derived {
+    // The derived session key and salts: zeroed when the context is dropped. The cipher contexts
+    // are the crypto provider's, which clears its own key schedules.
+    fn drop(&mut self) {
+        match self {
+            Derived::Aes128CmSha1_80 { key, salt, .. } => {
+                zeroize::Zeroize::zeroize(key);
+                zeroize::Zeroize::zeroize(salt);
+            }
+            Derived::AeadAes128Gcm { salt, .. } | Derived::AeadAes256Gcm { salt, .. } => {
+                zeroize::Zeroize::zeroize(salt);
+            }
+        }
+    }
 }
 
 impl Derived {
