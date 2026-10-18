@@ -21,6 +21,7 @@ tracing.workspace = true
 serde.workspace = true
 crc.workspace = true
 subtle.workspace = true
+zeroize.workspace = true
 hmac = { workspace = true, optional = true }
 # Package rename not supported with workspace inheritance
 sha1_ = { package = "sha1", version = "0.10", optional = true }

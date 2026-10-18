@@ -1047,6 +1047,7 @@ dependencies = [
  "subtle",
  "tracing",
  "tracing-subscriber",
+ "zeroize",
 ]
 
 [[package]]

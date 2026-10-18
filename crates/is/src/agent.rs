@@ -296,6 +296,13 @@ pub enum IceAgentEvent {
     },
 }
 
+impl Drop for IceCreds {
+    // The ICE password authenticates the connectivity checks: zeroed when the credentials drop.
+    fn drop(&mut self) {
+        zeroize::Zeroize::zeroize(&mut self.pass);
+    }
+}
+
 impl IceCreds {
     /// Creates a new instance of `IceCreds` with random values for the username fragment and password.
     pub fn new() -> Self {
