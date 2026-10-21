@@ -801,6 +801,10 @@ impl<const ML: usize, const SL: usize> SrtpKey<ML, SL> {
 
             round += 1;
         }
+
+        // The AES output is the session key or salt itself: no copy is left in this frame.
+        zeroize::Zeroize::zeroize(&mut buf);
+        zeroize::Zeroize::zeroize(&mut input);
     }
 }
 
@@ -889,6 +893,11 @@ impl Derived {
             dec: crypto.aes_128_cm_sha1_80().create_cipher(rtcp_aes, false),
         };
 
+        // The session keys and salts were copied into the contexts: no copy is left here.
+        zeroize::Zeroize::zeroize(&mut rtp_aes);
+        zeroize::Zeroize::zeroize(&mut rtp_salt);
+        zeroize::Zeroize::zeroize(&mut rtcp_aes);
+        zeroize::Zeroize::zeroize(&mut rtcp_salt);
         (rtp, rtcp)
     }
 
@@ -924,6 +933,11 @@ impl Derived {
             dec: crypto.aead_aes_128_gcm().create_cipher(rtcp_aes, false),
         };
 
+        // The session keys and salts were copied into the contexts: no copy is left here.
+        zeroize::Zeroize::zeroize(&mut rtp_aes);
+        zeroize::Zeroize::zeroize(&mut rtp_salt);
+        zeroize::Zeroize::zeroize(&mut rtcp_aes);
+        zeroize::Zeroize::zeroize(&mut rtcp_salt);
         (rtp, rtcp)
     }
 
@@ -959,6 +973,11 @@ impl Derived {
             dec: crypto.aead_aes_256_gcm().create_cipher(rtcp_aes, false),
         };
 
+        // The session keys and salts were copied into the contexts: no copy is left here.
+        zeroize::Zeroize::zeroize(&mut rtp_aes);
+        zeroize::Zeroize::zeroize(&mut rtp_salt);
+        zeroize::Zeroize::zeroize(&mut rtcp_aes);
+        zeroize::Zeroize::zeroize(&mut rtcp_salt);
         (rtp, rtcp)
     }
 
