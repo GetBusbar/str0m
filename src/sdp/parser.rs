@@ -151,7 +151,7 @@ where
     let ice_ufrag = attribute_line("ice-ufrag", any_value()).map(SessionAttribute::IceUfrag);
 
     // a=ice-pwd:4d64pT3T1xfwbZvi9fQKjoPb
-    let ice_pwd = attribute_line("ice-pwd", any_value()).map(SessionAttribute::IcePwd);
+    let ice_pwd = attribute_line("ice-pwd", ice_password()).map(SessionAttribute::IcePwd);
 
     // a=ice-options:trickle
     let ice_opt = attribute_line("ice-options", any_value()).map(SessionAttribute::IceOptions);
@@ -444,7 +444,7 @@ where
     let ice_ufrag = attribute_line("ice-ufrag", any_value()).map(MediaAttribute::IceUfrag);
 
     // a=ice-pwd:4d64pT3T1xfwbZvi9fQKjoPb
-    let ice_pwd = attribute_line("ice-pwd", any_value()).map(MediaAttribute::IcePwd);
+    let ice_pwd = attribute_line("ice-pwd", ice_password()).map(MediaAttribute::IcePwd);
 
     // a=ice-options:trickle
     let ice_opt = attribute_line("ice-options", any_value()).map(MediaAttribute::IceOptions);
@@ -883,6 +883,15 @@ where
     Input::Error: ParseError<Input::Token, Input::Range, Input::Position>,
 {
     many1(satisfy(|c| c != '\r' && c != '\n'))
+}
+
+/// An `a=ice-pwd` value, gathered into an [`IcePassword`]: no growth of it leaves a copy behind.
+fn ice_password<Input>() -> impl Parser<Input, Output = IcePassword>
+where
+    Input: Stream<Token = char>,
+    Input::Error: ParseError<Input::Token, Input::Range, Input::Position>,
+{
+    many1::<IcePassword, _, _>(satisfy(|c| c != '\r' && c != '\n'))
 }
 
 /// We discovered a stray \n in safari SDP. This line end handles \r\n, \n or EOF.

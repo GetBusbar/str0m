@@ -177,7 +177,8 @@ impl Session {
 
         Some(IceCreds {
             ufrag: ufrag.to_string(),
-            pass: pass.to_string(),
+            // Copied at its exact length: no growth leaves a piece of it behind.
+            pass: String::from(&**pass),
         })
     }
 
@@ -213,6 +214,59 @@ impl Session {
     }
 }
 
+/// An ICE password (`a=ice-pwd`) held in a session description: zeroed when dropped, and grown
+/// while parsed without leaving a copy of what it held behind.
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
+pub struct IcePassword(String);
+
+impl Drop for IcePassword {
+    fn drop(&mut self) {
+        zeroize::Zeroize::zeroize(&mut self.0);
+    }
+}
+
+impl Extend<char> for IcePassword {
+    fn extend<T: IntoIterator<Item = char>>(&mut self, iter: T) {
+        for c in iter {
+            let need = self.0.len() + c.len_utf8();
+            if need > self.0.capacity() {
+                // Grow by hand: the old buffer is zeroed before it is freed.
+                let mut grown = String::with_capacity(need.max(self.0.capacity() * 2).max(32));
+                grown.push_str(&self.0);
+                zeroize::Zeroize::zeroize(&mut self.0);
+                self.0 = grown;
+            }
+            self.0.push(c);
+        }
+    }
+}
+
+impl From<String> for IcePassword {
+    fn from(v: String) -> Self {
+        IcePassword(v)
+    }
+}
+
+impl From<&str> for IcePassword {
+    fn from(v: &str) -> Self {
+        IcePassword(v.to_owned())
+    }
+}
+
+impl Deref for IcePassword {
+    type Target = str;
+
+    fn deref(&self) -> &str {
+        &self.0
+    }
+}
+
+impl fmt::Display for IcePassword {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(&self.0)
+    }
+}
+
 /// Attributes before the first m= line.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum SessionAttribute {
@@ -227,7 +281,7 @@ pub enum SessionAttribute {
     AllowMixedExts,
     IceLite,
     IceUfrag(String),
-    IcePwd(String),
+    IcePwd(IcePassword),
     IceOptions(String),
     Fingerprint(Fingerprint),
     Setup(Setup), // active, passive, actpass, holdconn
@@ -544,7 +598,8 @@ impl MediaLine {
 
         Some(IceCreds {
             ufrag: ufrag.to_string(),
-            pass: pass.to_string(),
+            // Copied at its exact length: no growth leaves a piece of it behind.
+            pass: String::from(&**pass),
         })
     }
     pub fn fingerprint(&self) -> Option<Fingerprint> {
@@ -870,7 +925,7 @@ pub enum MediaAttribute {
     // The "a=rtcp" line MUST NOT be added if the most recent answer included an "a=rtcp-mux" line.
     Rtcp(String),
     IceUfrag(String),
-    IcePwd(String),
+    IcePwd(IcePassword),
     IceOptions(String),
     Fingerprint(Fingerprint),
     Setup(Setup), // active, passive, actpass, holdconn

@@ -1677,7 +1677,7 @@ impl<'a, 'b> AsSdpParams<'a, 'b> {
         };
 
         v.push(IceUfrag(self.creds.ufrag.clone()));
-        v.push(IcePwd(self.creds.pass.clone()));
+        v.push(IcePwd(self.creds.pass.as_str().into()));
         v.push(IceOptions("trickle".into()));
         v.push(Fingerprint(self.fingerprint.clone()));
         v.push(Setup(self.setup));

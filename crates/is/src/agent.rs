@@ -567,7 +567,7 @@ impl IceAgent {
     /// ### Panics
     ///
     /// Panics if there are no remote credentials set.
-    fn stun_credentials(&self, reply: bool) -> (String, String) {
+    fn stun_credentials(&self, reply: bool) -> (String, zeroize::Zeroizing<String>) {
         let local = &self.local_credentials;
 
         let (left, right, peer_pass) = if reply {
@@ -581,11 +581,12 @@ impl IceAgent {
         };
 
         let username = format!("{left}:{right}");
-        let password = if reply {
+        // Held zeroising: the password is the checks' integrity key.
+        let password = zeroize::Zeroizing::new(if reply {
             local.pass.clone()
         } else {
-            peer_pass.into()
-        };
+            String::from(peer_pass)
+        });
 
         (username, password)
     }
