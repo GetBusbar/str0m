@@ -89,7 +89,9 @@ impl TransId {
     /// A new random transaction id.
     pub fn new() -> Self {
         let mut t = [0_u8; 12];
-        NonCryptographicRng::fill(&mut t);
+        for v in &mut t {
+            *v = NonCryptographicRng::u8();
+        }
         TransId(t)
     }
 

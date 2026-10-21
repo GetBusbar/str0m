@@ -2024,7 +2024,7 @@ version = "0.7.0"
 dependencies = [
  "base64ct",
  "dimpl",
- "getrandom 0.3.4",
+ "fastrand",
  "openssl",
  "serde",
  "subtle",
