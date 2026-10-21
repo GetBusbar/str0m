@@ -648,6 +648,14 @@ impl RtcSctp {
             PayloadProtocolIdentifier::String
         };
 
+        if buf.is_empty() {
+            // RFC 8831 §6.6: an empty message is sent as one byte under an empty PPID, which the
+            // receiving end drops (`ppi_adjust_buf`). sctp-proto sends no chunk for zero bytes, so
+            // the empty message would never leave.
+            stream.write_with_ppi(&[0], ppi)?;
+            return Ok(0);
+        }
+
         Ok(stream.write_with_ppi(buf, ppi)?)
     }
 
