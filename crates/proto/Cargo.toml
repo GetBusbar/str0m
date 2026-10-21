@@ -27,7 +27,8 @@ dimpl = { workspace = true, optional = true }
 time.workspace = true
 base64ct.workspace = true
 subtle.workspace = true
-fastrand.workspace = true
+# Identifier randomness is drawn from the OS per call (src/rng.rs): no per-thread generator.
+getrandom = "0.3"
 serde.workspace = true
 
 # For openssl errors
