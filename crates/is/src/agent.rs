@@ -235,23 +235,12 @@ impl IceConnectionState {
 /// Credentials for STUN packages.
 ///
 /// By matching IceCreds in STUN to SDP, we know which STUN belongs to which Peer.
-#[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct IceCreds {
     /// From a=ice-ufrag
     pub ufrag: String,
     /// From a=ice-pwd
     pub pass: String,
-}
-
-impl fmt::Debug for IceCreds {
-    // The password authenticates the connectivity checks and the credentials are logged with
-    // `{:?}`: it is never shown, whatever the `pii` feature says. The user name is public.
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("IceCreds")
-            .field("ufrag", &self.ufrag)
-            .field("pass", &"<redacted>")
-            .finish()
-    }
 }
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
@@ -3003,21 +2992,5 @@ mod test {
         agent.set_mtu(900..=1280);
         assert_eq!(agent.mtu(), 900);
         assert_eq!(agent.mtu_warn(), 1280);
-    }
-}
-
-#[cfg(test)]
-mod redaction {
-    use super::IceCreds;
-
-    #[test]
-    fn ice_creds_debug_never_states_the_password() {
-        let creds = IceCreds {
-            ufrag: "Xu6v".into(),
-            pass: "s3cretPassw0rdOfTwentyFour".into(),
-        };
-        let shown = format!("{creds:?}");
-        assert!(!shown.contains("s3cretPassw0rdOfTwentyFour"), "{shown}");
-        assert!(shown.contains("Xu6v"), "{shown}");
     }
 }

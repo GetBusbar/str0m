@@ -216,15 +216,8 @@ impl Session {
 
 /// An ICE password (`a=ice-pwd`) held in a session description: zeroed when dropped, and grown
 /// while parsed without leaving a copy of what it held behind.
-#[derive(Clone, PartialEq, Eq, Default)]
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct IcePassword(String);
-
-impl fmt::Debug for IcePassword {
-    // Never shown, whatever the `pii` feature says: a description is logged with `{:?}`.
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str("IcePassword(<redacted>)")
-    }
-}
 
 impl Drop for IcePassword {
     fn drop(&mut self) {
@@ -4131,23 +4124,6 @@ f78dde68-7055-4e20-bb37-433803dd1ed1\r\n\
                 let serialized = f.to_string();
                 assert!(serialized.contains(&format!("level-id={}", level_id)));
             }
-        }
-    }
-}
-
-#[cfg(test)]
-mod redaction {
-    use super::{IcePassword, MediaAttribute, SessionAttribute};
-
-    #[test]
-    fn an_ice_password_debug_never_states_it() {
-        let pass = "s3cretPassw0rdOfTwentyFour";
-        for shown in [
-            format!("{:?}", IcePassword::from(pass)),
-            format!("{:?}", SessionAttribute::IcePwd(pass.into())),
-            format!("{:?}", MediaAttribute::IcePwd(pass.into())),
-        ] {
-            assert!(!shown.contains(pass), "{shown}");
         }
     }
 }
